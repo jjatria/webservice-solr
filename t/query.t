@@ -47,6 +47,10 @@ subtest 'Basic queries' => sub {
         query => [ { first => [ 'Roger', 'Dodger' ] }, { last => 'Moore' } ],
         expect => '((first:"Roger" OR first:"Dodger") OR last:"Moore")'
     );
+    _check(
+        query => [ first => 'Roger', last => 'Moore' ],
+        expect => '(first:"Roger" OR last:"Moore")'
+    );
 
     _check(
         query => {
@@ -233,6 +237,19 @@ subtest 'Nesting ranges in require/prohibit' => sub {
             bar => { -require => { -range => [qw( * * )] } },
         },
         expect => q{(+bar:[* TO *] AND +(foo:"\*" OR foo:"\*"))},
+    );
+
+    _check(
+        query => [ foo => undef, foo => { -range => [ 1, 10 ] } ],
+        expect => q{(-foo:[* TO *] OR foo:[1 TO 10])},
+    );
+
+    _check(
+        query => {
+            foo => [ undef, { -range => [ 1, 10 ] } ],
+            bar => "qux",
+        },
+        expect => q{(bar:"qux" AND (-foo:[* TO *] OR foo:[1 TO 10]))},
     );
 };
 
